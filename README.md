@@ -53,3 +53,50 @@ What we just did is create a host bridge (really a software-defined L2
 switch) that's connected to the underlying L2 network. This will allow us
 to instantiate VMs and connect them to this bridge thereby making them visible
 to all machines in the underlying L2 network.
+
+
+Install libvirt and Friends
+---------------------------
+
+To manage KVM, we will use libvirt as our interface. Let install it now:
+
+```
+sudo apt update
+sudo apt install qemu-kvm libvirt-daemon-system
+```
+
+Log out and log back in to ensure that your membership to the libvirt
+group is in effect.
+
+The above installation will automatically create `virbr0` for us but we want
+to use `br0` instead. Let's remove `virbr0` and make `br0` the default.
+
+```
+virsh net-destroy default
+virsh net-edit default
+```
+
+Update the contents to:
+
+```
+<network>
+  <name>br0</name>
+  <forward mode='bridge'/>
+  <bridge name='br0'/>
+</network>
+```
+
+```
+virsh net-start br0
+virsh net-undefine default
+virsh net-list --all
+brctl show
+ip a
+```
+
+
+References
+----------
+
+* [libvirt](https://ubuntu.com/server/docs/virtualization-libvirt)
+* [netplan](https://netplan.io/)
