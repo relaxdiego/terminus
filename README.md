@@ -1,3 +1,7 @@
+> Terminus is a planet in Isaac Asimov's Foundation series. It is the
+> capital planet of the First Foundation. It is located at the edge of
+> the Galaxy. --[Asimov Fandom Page](https://asimov.fandom.com/wiki/Terminus)
+
 Terminus Setup
 ==============
 
