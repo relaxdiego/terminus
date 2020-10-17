@@ -144,6 +144,14 @@ continue with the installation process.
 Remember that MAAS VMs must have static IPs in the 192.168.100.51/24
 to .53 range
 
+Once Ubuntu has finished installation, the VM will shutdown. To start
+it and make it autostart when the baremetal machine boots up, run:
+
+```
+virsh autostart maas1
+virsh start maas1
+```
+
 
 References
 ----------
