@@ -43,8 +43,13 @@ sudo netplan --debug generate
 sudo netplan --debug apply
 ```
 
-NOTE: We can't use `netplan try` here since we are defining a bridge and
-reverting that config isn't supported. In that case, make sure you got
-everything right or you'll have to walk over to the machine and fix via
-its console! Optionally, if you have a second ethernet or maybe even a
-WiFi interface, keep that on. That's outside the scope of this guide though.
+> NOTE: We can't use `netplan try` here since we are defining a bridge and
+> reverting that config isn't supported. In that case, make sure you got
+> everything right or you'll have to walk over to the machine and fix via
+> its console! Optionally, if you have a second ethernet or maybe even a
+> WiFi interface, keep that on. That's outside the scope of this guide though.
+
+What we just did is create a host bridge (really a software-defined L2
+switch) that's connected to the underlying L2 network. This will allow us
+to instantiate VMs and connect them to this bridge thereby making them visible
+to all machines in the underlying L2 network.
