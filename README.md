@@ -45,7 +45,7 @@ sudo netplan --debug apply
 
 > NOTE: We can't use `netplan try` here since we are defining a bridge and
 > reverting that config isn't supported. In that case, make sure you got
-> everything right or you'll have to walk over to the machine and fix via
+> everything right or you'll have to walk over to the machine and fix it via
 > its console! Optionally, if you have a second ethernet or maybe even a
 > WiFi interface, keep that on. That's outside the scope of this guide though.
 
@@ -58,7 +58,8 @@ to all machines in the underlying L2 network.
 Install libvirt and Friends
 ---------------------------
 
-To manage KVM, we will use libvirt as our interface. Let install it now:
+To manage KVM, we will use libvirt as our main management interface. Let's
+install it now:
 
 ```
 sudo apt update
@@ -88,6 +89,7 @@ Update the contents to:
 
 ```
 virsh net-start br0
+systemctl restart systemd-networkd
 virsh net-undefine default
 virsh net-list --all
 brctl show
