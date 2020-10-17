@@ -2,14 +2,24 @@
 > capital planet of the First Foundation. It is located at the edge of
 > the Galaxy. --[Asimov Fandom Page](https://asimov.fandom.com/wiki/Terminus)
 
-Terminus Setup
-==============
 
-Install Ubuntu 20.04 on all baremetal machines. Give them all a static IP,
-preferably in the range of 192.168.100.41 to .45. All baremetals get a static
-IP so that we can connect to them during setup. The VMs that will host MAAS
-will also get static IPs, preferably in the range of 192.168.100.51 to .53.
-All other VMs will get their network config via the MAAS DHCP server.
+Terminus
+========
+
+These are notes that I'm writing specifically for myself so that I don't
+forget how to set up a test HA MAAS environment using what little baremetal
+machines may be available. The logical network design this README is based
+on may be found [here](https://docs.google.com/drawings/d/1IYXyQ_sG0gMksttrtztyzmbRIbm7ZwDBmN6bXXkeS-Y/edit).
+
+
+Install Ubuntu on the Baremetals
+--------------------------------
+
+Install Ubuntu Server 20.04 on all baremetal machines. Give them all
+static IPs, preferably in the range of 192.168.100.41 to .45. All baremetals
+get a static IP so that we can connect to them during setup. The VMs that
+will host MAAS will also get static IPs, preferably in the range of
+192.168.100.51 to .53. VMs that will enlist with MAAS will need to PXE boot.
 
 
 Baremetal Network Config
@@ -122,7 +132,7 @@ virt-install \
     --vcpus=2 \
     --memory=6144 \
     --disk size=40 \
-    --cdrom=/opt/terminus/ubuntu-20.04-live-server-amd64.iso \
+    --cdrom=/opt/terminus/ubuntu-18.04.5-live-server-amd64.iso \
     --os-variant=ubuntu18.04 \
     --graphics vnc,listen=0.0.0.0 --noautoconsole
 ```
@@ -160,7 +170,66 @@ Repeat the above steps for:
 
 1. maas2
 2. maas3
-3. control (will host FCE)
+3. configurator
+
+
+Configure Your SSH to Use the Jumpbox
+-------------------------------------
+
+Ensure you have something like this in your local `~/.ssh/config`
+
+```
+Host pi terminus-jumpbox
+    ForwardAgent yes
+    HostName 192.168.86.21
+    User ubuntu
+
+Host configurator
+    ForwardAgent yes
+    HostName 192.168.100.22
+    User mark
+    ProxyCommand ssh -W %h:%p terminus-jumpbox
+
+Host amp-dev-01
+    ForwardAgent yes
+    HostName 192.168.100.41
+    User mark
+    ProxyCommand ssh -W %h:%p terminus-jumpbox
+
+Host amp-dev-02
+    ForwardAgent yes
+    HostName 192.168.100.42
+    User mark
+    ProxyCommand ssh -W %h:%p terminus-jumpbox
+
+Host maas1
+    ForwardAgent yes
+    HostName 192.168.100.51
+    User mark
+    ProxyCommand ssh -W %h:%p terminus-jumpbox
+
+...
+```
+
+Create an entry for each baremetal and virtual machine that we connect
+to the `192.168.100.x` network so that it's easier to ssh to them.
+
+
+Starting Over
+-------------
+
+Want to stand up a new MAAS cluster or you just messed up and need to
+start over? Or maybe you want to try out a different version of MAAS?
+No problem.
+
+```
+virsh list --all
+for i in $(seq 1 3); do virsh destroy maas$i && virsh undefine maas$i; done
+virsh destroy configurator && virsh undefine configurator
+```
+
+Now re-create the VMs as stated above
+
 
 
 References
