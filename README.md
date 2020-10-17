@@ -156,6 +156,12 @@ virsh autostart maas1
 virsh start maas1
 ```
 
+Repeat the above steps for:
+
+1. maas2
+2. maas3
+3. control (will host FCE)
+
 
 References
 ----------
