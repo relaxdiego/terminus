@@ -97,6 +97,54 @@ ip a
 ```
 
 
+Instantiate the MAAS VMs
+------------------------
+
+Copy the [Ubuntu 20.04 iso](https://releases.ubuntu.com/20.04/ubuntu-20.04.1-live-server-amd64.iso)
+to the baremetal machine that will host the MAAS VMs. Make sure to locate it
+in a directory that's accessible to KVM services. Preferably `/opt/terminus/`.
+
+We will need another CLI tool to easily create a VM on KVM. Install:
+
+```
+sudo apt install virtinst
+```
+
+Then:
+
+```
+virt-install \
+    --name=maas1 \
+    --vcpus=2 \
+    --memory=6144 \
+    --disk size=40 \
+    --cdrom=/opt/terminus/ubuntu-20.04-live-server-amd64.iso \
+    --os-variant=ubuntu18.04 \
+    --graphics vnc,listen=0.0.0.0 --noautoconsole
+```
+
+Note that `--memory` uses `MiB` as units and `--disk` uses `GiB`
+
+To get the VNC port number that the above VM is connected to, run:
+
+```
+virsh vncdisplay maas1
+```
+
+You may need to run `sshuttle` in your localhost if the baremetals
+are accessible via a jumpbox:
+
+```
+sshuttle -v -H -r <jumpbox-hostname-or-ip> 192.168.100.0/24
+```
+
+Now run your VNC viewer and point it to `<baremetal-ip>:<vnc-port>` to
+continue with the installation process.
+
+Remember that MAAS VMs must have static IPs in the 192.168.100.51/24
+to .53 range
+
+
 References
 ----------
 
