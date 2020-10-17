@@ -114,8 +114,9 @@ ip a
 Instantiate the MAAS VMs
 ------------------------
 
-Copy the [Ubuntu 20.04 iso](https://releases.ubuntu.com/20.04/ubuntu-20.04.1-live-server-amd64.iso)
-to the baremetal machine that will host the MAAS VMs. Make sure to locate it
+Copy the [Ubuntu 20.04](https://releases.ubuntu.com/20.04/ubuntu-20.04.1-live-server-amd64.iso)
+(or [18.04](https://releases.ubuntu.com/18.04/ubuntu-18.04.5-live-server-amd64.iso))
+iso to the baremetal machine that will host the MAAS VMs. Make sure to locate it
 in a directory that's accessible to KVM services. Preferably `/opt/terminus/`.
 
 We will need another CLI tool to easily create a VM on KVM. Install:
