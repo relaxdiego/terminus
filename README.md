@@ -316,10 +316,18 @@ Want to stand up a new MAAS cluster or you just messed up and need to
 start over? Or maybe you want to try out a different version of MAAS?
 No problem.
 
+First, check which VMs are running in the baremetal:
+
 ```
 virsh list --all
-for i in $(seq 1 3); do virsh destroy maas$i && virsh undefine maas$i; done
-virsh destroy configurator && virsh undefine configurator
+```
+
+Next destroy and undefine each VM:
+
+```
+virsh destroy infra-1
+virsh undefine infra-1
+virsh vol-delete infra-1.qcow2 --pool=default
 ```
 
 Now re-create the VMs as stated above
