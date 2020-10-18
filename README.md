@@ -3,8 +3,8 @@
 > the Galaxy. --[Asimov Fandom Page](https://asimov.fandom.com/wiki/Terminus)
 
 
-Terminus
-========
+Terminus v2
+===========
 
 These are notes that I'm writing specifically for myself so that I don't
 forget how to set up a test HA MAAS environment using what little baremetal
@@ -15,39 +15,43 @@ on may be found [here](https://docs.google.com/drawings/d/1IYXyQ_sG0gMksttrtztyz
 Install Ubuntu on the Baremetals
 --------------------------------
 
-Install Ubuntu Server 20.04 on all baremetal machines. Give them all
-static IPs, preferably in the range of 192.168.100.41 to .45. All baremetals
-get a static IP so that we can connect to them during setup. The VMs that
-will host MAAS will also get static IPs, preferably in the range of
-192.168.100.51 to .53. VMs that will enlist with MAAS will need to PXE boot.
+Install Ubuntu Server LTS on all baremetals and configure them with
+static IPs as indicated in the logical network diagram above. We use
+static IPs here because MAAS, which serves as the DHCP server, is not
+yet set up in the Lab Net.
 
 
 Baremetal Network Config
 ------------------------
 
-Create a backup of your `/etc/netplan/xxxxxxxxx.yaml` file and then edit
-it like so:
+For each baremetal KVM host, create a backup of its `/etc/netplan/xxxxxxxxx.yaml`
+file and then edit it like so:
 
 ```
 network:
   version: 2
   ethernets:
-    <your-ethernet-port-name-here>:
+    <interface-name-here>:
       dhcp4: false
       dhcp6: false
+
   bridges:
     br0:
-      interfaces: [<your-ethernet-port-name-here>]
-      addresses:  [<this-machine's-static-ip-address>/24]
-      gateway4:   192.168.100.1
-      mtu:        1500
+      interfaces:
+      - <interface-name-here>
+      addresses:
+      - 192.168.100.XX/24
+      gateway4: 192.168.100.1
       nameservers:
-        addresses: [1.1.1.1,8.8.8.8]
-      parameters:
-        stp:           true
-        forward-delay: 4
+        addresses:
+        - 1.1.1.1
+        - 8.8.8.8
+        - 8.8.4.4
       dhcp4: false
       dhcp6: false
+      parameters:
+        forward-delay: 4
+        stp:           true
 ```
 
 Then apply the changes:
@@ -67,6 +71,10 @@ What we just did is create a host bridge (really a software-defined L2
 switch) that's connected to the underlying L2 network. This will allow us
 to instantiate VMs and connect them to this bridge thereby making them visible
 to all machines in the underlying L2 network.
+
+Note that we have not configured VLANs at this point. We will do that once
+all baremetal and virtual machines have been set up and verified to ping each
+other on the `192.168.100.x` subnet.
 
 
 Install libvirt and Friends
@@ -103,7 +111,7 @@ Update the contents to:
 
 ```
 virsh net-start br0
-systemctl restart systemd-networkd
+sudo-systemctl restart systemd-networkd
 virsh net-undefine default
 virsh net-list --all
 brctl show
@@ -111,13 +119,12 @@ ip a
 ```
 
 
-Instantiate the MAAS VMs
-------------------------
+Instantiate the Infra VMs
+-------------------------
 
 Copy the [Ubuntu 20.04](https://releases.ubuntu.com/20.04/ubuntu-20.04.1-live-server-amd64.iso)
 (or [18.04](https://releases.ubuntu.com/18.04/ubuntu-18.04.5-live-server-amd64.iso))
-iso to the baremetal machine that will host the MAAS VMs. Make sure to locate it
-in a directory that's accessible to KVM services. Preferably `/opt/terminus/`.
+iso to the baremetal machine that will serve as the infra machines.
 
 We will need another CLI tool to easily create a VM on KVM. Install:
 
@@ -129,11 +136,11 @@ Then:
 
 ```
 virt-install \
-    --name=maas1 \
+    --name=infra-1 \
     --vcpus=2 \
     --memory=6144 \
     --disk size=40 \
-    --cdrom=/opt/terminus/ubuntu-18.04.5-live-server-amd64.iso \
+    --cdrom=ubuntu-18.04.5-live-server-amd64.iso \
     --os-variant=ubuntu18.04 \
     --graphics vnc,listen=0.0.0.0 --noautoconsole
 ```
@@ -143,7 +150,7 @@ Note that `--memory` uses `MiB` as units and `--disk` uses `GiB`
 To get the VNC port number that the above VM is connected to, run:
 
 ```
-virsh vncdisplay maas1
+virsh vncdisplay infra-1
 ```
 
 You may need to run `sshuttle` in your localhost if the baremetals
@@ -156,21 +163,21 @@ sshuttle -v -H -r <jumpbox-hostname-or-ip> 192.168.100.0/24
 Now run your VNC viewer and point it to `<baremetal-ip>:<vnc-port>` to
 continue with the installation process.
 
-Remember that MAAS VMs must have static IPs in the 192.168.100.51/24
-to .53 range
+Make sure to assign the correct static IPs to the infra VMs as shown
+in Level 1 of the logical network diagram.
 
 Once Ubuntu has finished installation, the VM will shutdown. To start
 it and make it autostart when the baremetal machine boots up, run:
 
 ```
-virsh autostart maas1
-virsh start maas1
+virsh autostart infra-1
+virsh start infra-1
 ```
 
 Repeat the above steps for:
 
-1. maas2
-2. maas3
+1. infra-2
+2. infra-3
 3. configurator
 
 
@@ -180,40 +187,124 @@ Configure Your SSH to Use the Jumpbox
 Ensure you have something like this in your local `~/.ssh/config`
 
 ```
-Host pi terminus-jumpbox
+Host terminus-jb
     ForwardAgent yes
     HostName 192.168.86.21
     User ubuntu
 
-Host configurator
+Host kvm-1
+    ForwardAgent yes
+    HostName 192.168.100.11
+    User ubuntu
+    ProxyCommand ssh -W %h:%p terminus-jb
+
+Host kvm-2
+    ForwardAgent yes
+    HostName 192.168.100.12
+    User ubuntu
+    ProxyCommand ssh -W %h:%p terminus-jb
+
+Host config
+    ForwardAgent yes
+    HostName 192.168.100.20
+    User ubuntu
+    ProxyCommand ssh -W %h:%p terminus-jb
+
+Host infra-1
+    ForwardAgent yes
+    HostName 192.168.100.21
+    User ubuntu
+    ProxyCommand ssh -W %h:%p terminus-jb
+
+Host infra-2
     ForwardAgent yes
     HostName 192.168.100.22
-    User mark
-    ProxyCommand ssh -W %h:%p terminus-jumpbox
+    User ubuntu
+    ProxyCommand ssh -W %h:%p terminus-jb
 
-Host amp-dev-01
+Host infra-3
     ForwardAgent yes
-    HostName 192.168.100.41
-    User mark
-    ProxyCommand ssh -W %h:%p terminus-jumpbox
-
-Host amp-dev-02
-    ForwardAgent yes
-    HostName 192.168.100.42
-    User mark
-    ProxyCommand ssh -W %h:%p terminus-jumpbox
-
-Host maas1
-    ForwardAgent yes
-    HostName 192.168.100.51
-    User mark
-    ProxyCommand ssh -W %h:%p terminus-jumpbox
-
-...
+    HostName 192.168.100.23
+    User ubuntu
+    ProxyCommand ssh -W %h:%p terminus-jb
 ```
 
 Create an entry for each baremetal and virtual machine that we connect
 to the `192.168.100.x` network so that it's easier to ssh to them.
+
+
+Setting up VLANs
+----------------
+
+At this point, your baremetals should be able to ping each other on the
+`192.168.100.x` subnet. Likewise, the baremetals and virtual machines should
+also be able to ping each other on said subnet. If that's not the case,
+double check your netplan config for all baremetal and virtual machines
+before proceeding.
+
+As per [this blog](https://web.archive.org/web/20200211182440/http://blog.davidvassallo.me/2012/05/05/kvm-brctl-in-linux-bringing-vlans-to-the-guests/),
+if we want to have our infra nodes be VLAN-aware, we must first make sure our
+baremetal hosts are aware of the VLAN. It's also important to define and attach
+our VLANs to `br0` rather than the baremetal host's physical interface, otherwise
+the packets will be untagged before they reach our infra nodes. Thus, make sure
+to append the following to your baremetal host's `/etc/netplan/xxxxxxx.yaml` file:
+
+```
+  vlans:
+    vlan10:
+      id:        10
+      addresses: [192.168.110.XX/24]
+      link:      br0
+    vlan11:
+      id:        11
+      addresses: [192.168.111.XX/24]
+      link:      br0
+    vlan12:
+      id:        12
+      addresses: [192.168.112.XX/24]
+      link:      br0
+```
+
+Save the netplan file and then run:
+
+```
+sudo netplan --debug generate
+sudo netplan --debug apply
+```
+
+Now the baremetal machines should be able to ping each other on all four
+subnets that are indicated in our netplan config.
+
+At this point, our baremetal machines are VLAN aware, but our infra nodes
+have no idea of these yet. Let's add the following to their own netplan
+config:
+
+```
+  vlans:
+    vlan10:
+      id:        10
+      addresses: [192.168.110.XX/24]
+      link:      <machine's-interface-name>
+    vlan11:
+      id:        11
+      addresses: [192.168.111.XX/24]
+      link:      <machine's-interface-name>
+    vlan12:
+      id:        12
+      addresses: [192.168.112.XX/24]
+      link:      <machine's-interface-name>
+```
+
+Note how we link the VLAN to the interface that's connected to br0. Save
+the updated configuration and then run:
+
+```
+sudo netplan --debug generate
+sudo netplan --debug apply
+```
+
+Now all 6 machines (baremetal and virtual) should be able to ping each
+other on all 4 subnets.
 
 
 Starting Over
