@@ -124,7 +124,7 @@ Instantiate the Infra VMs
 
 Copy the [Ubuntu 20.04](https://releases.ubuntu.com/20.04/ubuntu-20.04.1-live-server-amd64.iso)
 (or [18.04](https://releases.ubuntu.com/18.04/ubuntu-18.04.5-live-server-amd64.iso))
-iso to the baremetal machine that will serve as the infra machines.
+iso to the baremetal machines.
 
 We will need another CLI tool to easily create a VM on KVM. Install:
 
