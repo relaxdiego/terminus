@@ -6,10 +6,14 @@
 Terminus v2
 ===========
 
-These are notes that I'm writing specifically for myself so that I don't
-forget how to set up a test HA MAAS environment using what little baremetal
-machines may be available. The logical network design this README is based
-on may be found [here](https://docs.google.com/drawings/d/1IYXyQ_sG0gMksttrtztyzmbRIbm7ZwDBmN6bXXkeS-Y/edit).
+This repo documents the steps that I took to implement a test bed for exploring
+Metal-as-a-Service (MAAS) in HA mode. The overall design is illustrated in
+[this diagram](https://docs.google.com/drawings/d/1IYXyQ_sG0gMksttrtztyzmbRIbm7ZwDBmN6bXXkeS-Y/edit).
+
+The objective here is to have a workable environment using what little available
+hardware is in my home office. I scraped together some old gear and used them
+to their fullest. Thus, this environment is built more for exploration, rather
+than performance. In other words, don't depend on this design for production!
 
 
 Install Ubuntu on the Baremetals
