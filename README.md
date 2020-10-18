@@ -72,9 +72,9 @@ switch) that's connected to the underlying L2 network. This will allow us
 to instantiate VMs and connect them to this bridge thereby making them visible
 to all machines in the underlying L2 network.
 
-Note that we have not configured VLANs at this point. We will do that once
-all baremetal and virtual machines have been set up and verified to ping each
-other on the `192.168.100.x` subnet.
+> Note that we have not configured VLANs at this point. We will do that once
+> all baremetal and virtual machines have been set up and verified to ping each
+> other on the `192.168.100.x` subnet.
 
 
 Install libvirt and Friends
@@ -236,18 +236,16 @@ to the `192.168.100.x` network so that it's easier to ssh to them.
 Setting up VLANs
 ----------------
 
-At this point, your baremetals should be able to ping each other on the
-`192.168.100.x` subnet. Likewise, the baremetals and virtual machines should
-also be able to ping each other on said subnet. If that's not the case,
-double check your netplan config for all baremetal and virtual machines
-before proceeding.
+At this point, your baremetal and virtual machines should be able to ping each
+other on the `192.168.100.x` subnet. If that's not the case, double check your
+netplan config for all baremetal and virtual machines before proceeding.
 
 As per [this blog](https://web.archive.org/web/20200211182440/http://blog.davidvassallo.me/2012/05/05/kvm-brctl-in-linux-bringing-vlans-to-the-guests/),
 if we want to have our infra nodes be VLAN-aware, we must first make sure our
 baremetal hosts are aware of the VLAN. It's also important to define and attach
 our VLANs to `br0` rather than the baremetal host's physical interface, otherwise
-the packets will be untagged before they reach our infra nodes. Thus, make sure
-to append the following to your baremetal host's `/etc/netplan/xxxxxxx.yaml` file:
+the packets will be untagged before they even reach br0. Thus, make sure to
+append the following to your baremetal host's `/etc/netplan/xxxxxxx.yaml` file:
 
 ```
   vlans:
@@ -265,7 +263,8 @@ to append the following to your baremetal host's `/etc/netplan/xxxxxxx.yaml` fil
       link:      br0
 ```
 
-Save the netplan file and then run:
+Change the last octets above to match the baremetal's last octet in the
+`192.168.100.x` subnet. Save the netplan file and then run:
 
 ```
 sudo netplan --debug generate
@@ -294,6 +293,9 @@ config:
       addresses: [192.168.112.XX/24]
       link:      <machine's-interface-name>
 ```
+
+Change the last octets above to match the virtual machine's last octet
+in the `192.168.100.x` subnet.
 
 Note how we link the VLAN to the interface that's connected to br0. Save
 the updated configuration and then run:
