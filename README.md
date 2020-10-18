@@ -244,7 +244,7 @@ As per [this blog](https://web.archive.org/web/20200211182440/http://blog.davidv
 if we want to have our infra nodes be VLAN-aware, we must first make sure our
 baremetal hosts are aware of the VLAN. It's also important to define and attach
 our VLANs to `br0` rather than the baremetal host's physical interface, otherwise
-the packets will be untagged before they even reach br0. Thus, make sure to
+the packets will be untagged before they even reach `br0`. Thus, make sure to
 append the following to your baremetal host's `/etc/netplan/xxxxxxx.yaml` file:
 
 ```
@@ -297,7 +297,7 @@ config:
 Change the last octets above to match the virtual machine's last octet
 in the `192.168.100.x` subnet.
 
-Note how we link the VLAN to the interface that's connected to br0. Save
+Note how we link the VLAN to the interface that's connected to `br0`. Save
 the updated configuration and then run:
 
 ```
