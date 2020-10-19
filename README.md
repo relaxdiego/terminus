@@ -223,6 +223,12 @@ Host infra-2
     HostName 192.168.100.22
     User ubuntu
     ProxyCommand ssh -W %h:%p terminus-jb
+
+Host infra-3
+    ForwardAgent yes
+    HostName 192.168.100.23
+    User ubuntu
+    ProxyCommand ssh -W %h:%p terminus-jb
 ```
 
 
