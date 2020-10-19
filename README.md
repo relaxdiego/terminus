@@ -324,7 +324,7 @@ virsh list --all
 Next destroy and undefine each VM:
 
 ```
-for i in $(seq 1 2); do
+for i in $(seq 1 3); do
     virsh destroy infra-$i
     virsh undefine infra-$i
     virsh vol-delete infra-$i.qcow2 --pool=default
