@@ -139,22 +139,25 @@ sudo apt install virtinst
 Then:
 
 ```
-virt-install \
-    --name=infra-1 \
-    --vcpus=2 \
-    --memory=6144 \
-    --disk size=40 \
-    --cdrom=ubuntu-18.04.5-live-server-amd64.iso \
-    --os-variant=ubuntu18.04 \
-    --graphics vnc,listen=0.0.0.0 --noautoconsole
+for i in $(seq 1 2); do
+    virt-install \
+        --name=infra-$i \
+        --vcpus=2 \
+        --memory=6144 \
+        --disk size=64 \
+        --cdrom=ubuntu-18.04.5-live-server-amd64.iso \
+        --os-variant=ubuntu18.04 \
+        --graphics vnc,listen=0.0.0.0 --noautoconsole
+done
 ```
 
 Note that `--memory` uses `MiB` as units and `--disk` uses `GiB`
 
-To get the VNC port number that the above VM is connected to, run:
+To get the VNC port number that the above VMs are connected to, run:
 
 ```
 virsh vncdisplay infra-1
+virsh vncdisplay infra-2
 ```
 
 You may need to run `sshuttle` in your localhost if the baremetals
@@ -178,11 +181,7 @@ virsh autostart infra-1
 virsh start infra-1
 ```
 
-Repeat the above steps for:
-
-1. infra-2
-2. infra-3
-3. configurator
+Repeat the above steps for the confi (configurator) VM.
 
 
 Configure Your SSH to Use the Jumpbox
@@ -225,16 +224,7 @@ Host infra-2
     HostName 192.168.100.22
     User ubuntu
     ProxyCommand ssh -W %h:%p terminus-jb
-
-Host infra-3
-    ForwardAgent yes
-    HostName 192.168.100.23
-    User ubuntu
-    ProxyCommand ssh -W %h:%p terminus-jb
 ```
-
-Create an entry for each baremetal and virtual machine that we connect
-to the `192.168.100.x` network so that it's easier to ssh to them.
 
 
 Setting up VLANs
