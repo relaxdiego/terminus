@@ -329,9 +329,11 @@ virsh list --all
 Next destroy and undefine each VM:
 
 ```
-virsh destroy infra-1
-virsh undefine infra-1
-virsh vol-delete infra-1.qcow2 --pool=default
+for i in $(seq 1 2); do
+    virsh destroy infra-$i
+    virsh undefine infra-$i
+    virsh vol-delete infra-$i.qcow2 --pool=default
+done
 ```
 
 Now re-create the VMs as stated above
