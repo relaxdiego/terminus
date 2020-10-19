@@ -3,26 +3,26 @@
 > the Galaxy. --[Asimov Fandom Page](https://asimov.fandom.com/wiki/Terminus)
 
 
-Terminus v2
-===========
+Terminus
+========
 
 This repo documents the steps that I took to implement a test bed for exploring
-Metal-as-a-Service (MAAS) in HA mode. The overall design is illustrated in
+[Metal-as-a-Service](https://maas.io/) (MAAS) in HA mode. The overall design is illustrated in
 [this diagram](https://docs.google.com/drawings/d/1IYXyQ_sG0gMksttrtztyzmbRIbm7ZwDBmN6bXXkeS-Y/edit).
 
-The objective here is to have a workable environment using what little available
-hardware is in my home office. I scraped together some old gear and used them
-to their fullest. Thus, this environment is built more for exploration, rather
-than performance. In other words, don't depend on this design for production!
+The objective here is to have a workable environment using just spare hardware
+in my home office. Thus, this environment is built more for exploration, rather
+than performance and reliability. In other words, don't depend on this design
+for production, folks!
 
 
 Install Ubuntu on the Baremetals
 --------------------------------
 
-Install Ubuntu Server LTS on all baremetals and configure them with
-static IPs as indicated in the logical network diagram above. We use
-static IPs here because MAAS, which serves as the DHCP server, is not
-yet set up in the Lab Net.
+Install Ubuntu Server LTS on all baremetals and configure them with static
+IPs as indicated in the logical network diagram above. We use static IPs here
+because MAAS, which will be the DHCP (and PXE) server, is not yet set up in
+the network.
 
 
 Baremetal Network Config
@@ -71,10 +71,10 @@ sudo netplan --debug apply
 > its console! Optionally, if you have a second ethernet or maybe even a
 > WiFi interface, keep that on. That's outside the scope of this guide though.
 
-What we just did is create a host bridge (really a software-defined L2
-switch) that's connected to the underlying L2 network. This will allow us
-to instantiate VMs and connect them to this bridge thereby making them visible
-to all machines in the underlying L2 network.
+What we just did is create a Linux bridge (think of it as a software-defined L2
+switch on steroids) that's connected to the underlying L2 network. This will
+allow us to instantiate VMs and connect them to this bridge thereby making them
+visible to all machines in the underlying L2 network.
 
 > Note that we have not configured VLANs at this point. We will do that once
 > all baremetal and virtual machines have been set up and verified to ping each
