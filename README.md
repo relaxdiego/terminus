@@ -139,7 +139,7 @@ sudo apt install virtinst
 Then:
 
 ```
-for i in $(seq 1 2); do
+for i in $(seq 1 3); do
     virt-install \
         --name=infra-$i \
         --vcpus=2 \
@@ -157,7 +157,6 @@ To get the VNC port number that the above VMs are connected to, run:
 
 ```
 virsh vncdisplay infra-1
-virsh vncdisplay infra-2
 ```
 
 You may need to run `sshuttle` in your localhost if the baremetals
@@ -181,7 +180,7 @@ virsh autostart infra-1
 virsh start infra-1
 ```
 
-Repeat the above steps for the confi (configurator) VM.
+Repeat the above steps for the config (configurator) VM.
 
 
 Configure Your SSH to Use the Jumpbox
