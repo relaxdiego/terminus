@@ -115,7 +115,7 @@ Update the contents to:
 
 ```
 virsh net-start br0
-sudo-systemctl restart systemd-networkd
+sudo systemctl restart systemd-networkd
 virsh net-undefine default
 virsh net-list --all
 brctl show
