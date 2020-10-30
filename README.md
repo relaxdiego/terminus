@@ -231,6 +231,24 @@ Host infra-3
     ProxyCommand ssh -W %h:%p terminus-jb
 ```
 
+Ensure Passwordless sudo
+------------------------
+
+This will save you a lot of typing down the line. Run the following
+commands in all the machines (baremetals and VMs)
+
+First, test that it does the write thing:
+
+```
+sudo sed -E 's/^(%sudo.*) ALL$/\1 NOPASSWD:ALL/g' /etc/sudoers
+```
+
+Then commit to it!
+
+```
+sudo sed -i -E 's/^(%sudo.*) ALL$/\1 NOPASSWD:ALL/g' /etc/sudoers
+```
+
 
 Setting up VLANs
 ----------------
