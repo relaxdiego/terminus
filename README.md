@@ -326,6 +326,107 @@ Now all 6 machines (baremetal and virtual) should be able to ping each
 other on all 4 subnets.
 
 
+Prepare a Local Image Mirror
+----------------------------
+
+If you plan on re-installing MAAS multiple times (as one does in a
+lab environment), consider setting up a local image mirror in kvm-1
+so that your image syncs go faster. The following steps is adapted
+from [this guide](https://maas.io/docs/local-image-mirror#heading--set-up-local-mirror).
+
+```
+ssh kvm-1
+sudo apt install simplestreams
+KEYRING_FILE=/usr/share/keyrings/ubuntu-cloudimage-keyring.gpg
+IMAGE_SRC=https://images.maas.io/ephemeral-v3/stable
+IMAGE_DIR=/var/www/html/maas/images/ephemeral-v3/stable
+```
+
+`KEYRING_FILE` points to the GPG keyring file that `sstream-mirror` will
+use to verify the integrity of the downloaded images.
+
+
+```
+sudo sstream-mirror --keyring=$KEYRING_FILE $IMAGE_SRC $IMAGE_DIR \
+    'arch=amd64' 'release~(bionic|focal)' --max=1 --progress
+sudo sstream-mirror --keyring=$KEYRING_FILE $IMAGE_SRC $IMAGE_DIR \
+    'os~(grub*|pxelinux)' --max=1 --progress
+```
+
+The last two commands above will take some time depending on your bandwidth.
+
+Once the initial sync has completed, run a simple HTTP server using Python:
+
+```
+cd /var/www/html
+python3 -m http.server 3003
+```
+
+Then from each of the infra nodes, run:
+
+```
+curl http://192.168.100.11:3003/maas/images/ephemeral-v3/stable/
+```
+
+You should see something like:
+
+```
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Directory listing for /maas/images/ephemeral-v3/stable/</title>
+</head>
+<body>
+<h1>Directory listing for /maas/images/ephemeral-v3/stable/</h1>
+<hr>
+<ul>
+<li><a href=".data/">.data/</a></li>
+<li><a href="bionic/">bionic/</a></li>
+<li><a href="focal/">focal/</a></li>
+<li><a href="streams/">streams/</a></li>
+</ul>
+<hr>
+</body>
+</html>
+```
+
+Now let's make the HTTP server permanent via a systemd service. Write the
+following in `/etc/systemd/system/maas-local-image-mirror.service`:
+
+```
+[Unit]
+Description=Dumb HTTP server for MAAS local image mirror
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=3
+User=ubuntu
+WorkingDirectory=/var/www/html
+ExecStart=/usr/bin/env python3 -m http.server 3003
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then enable and start it:
+
+```
+sudo systemctl daemon-reload
+sudo systemctl enable maas-local-image-mirror
+sudo systemctl start maas-local-image-mirror
+```
+
+You should now have a local image mirror that MAAS can connect to via
+`http://192.168.100.11:3003/maas/images/ephemeral-v3/stable/`
+
+Optionally keep your local mirror in-sync by running the above `sstream-mirror`
+commands using a cronjob or a systemd timer.
+
+
 Starting Over
 -------------
 
