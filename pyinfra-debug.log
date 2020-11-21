@@ -1,0 +1,13 @@
+  File "/Users/mark/.pyenv/versions/3.7.7/envs/terminus/lib/python3.7/site-packages/pyinfra_cli/main.py", line 216, in cli
+    _main(*args, **kwargs)
+  File "/Users/mark/.pyenv/versions/3.7.7/envs/terminus/lib/python3.7/site-packages/pyinfra_cli/main.py", line 543, in _main
+    load_deploy_file(state, filename)
+  File "/Users/mark/.pyenv/versions/3.7.7/envs/terminus/lib/python3.7/site-packages/pyinfra_cli/util.py", line 168, in load_deploy_file
+    exec_file(filename)
+  File "/Users/mark/.pyenv/versions/3.7.7/envs/terminus/lib/python3.7/site-packages/pyinfra_cli/util.py", line 52, in exec_file
+    exec(PYTHON_CODES[filename], data)
+  File "blueprints/10-machines/kvm/main.py", line 4, in <module>
+    print(host.fact.ip_address)
+  File "/Users/mark/.pyenv/versions/3.7.7/envs/terminus/lib/python3.7/site-packages/pyinfra/api/host.py", line 33, in __getattr__
+    raise AttributeError('No such fact: {0}'.format(key))
+AttributeError: No such fact: ip_address

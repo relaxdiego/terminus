@@ -30,5 +30,5 @@ Development Getting Started
 Install all development dependencies
 
 ```
-make dev-dependencies
+make devdeps
 ```
