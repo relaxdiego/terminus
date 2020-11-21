@@ -1,0 +1,10 @@
+*.egg-info
+.coverage
+.last-*
+.pytest_cache
+.tox
+__pycache__
+build/
+htmlcov
+venv
+pyinfra-debug.log
